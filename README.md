@@ -100,7 +100,7 @@ size-comparison figure in the conclusions).
 
 ## CAPRI and delivery
 
-Follow the step-by-step [manual CAPRI guide](docs/capri-setup.md) (Italian)
+Follow the step-by-step [manual CAPRI guide](docs/capri-setup.md)
 for SSH setup, Slurm checks, pilot selection and the final campaign. After the
 final CAPRI campaign (20 runs per point):
 

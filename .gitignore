@@ -7,6 +7,7 @@ test_mpi
 .venv/
 __pycache__/
 dist/
+output/
 report/generated/
 report/*.aux
 report/*.fdb_latexmk

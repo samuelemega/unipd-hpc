@@ -1,38 +1,39 @@
-# Configurazione ed esecuzione manuale su CAPRI
+# Manual setup and execution on CAPRI
 
-Guida preparata il 10 settembre 2026. Tutti i comandi remoti sono da eseguire
-manualmente con il tuo account. Non occorre condividere password o chiavi.
-I nomi dei moduli software e le risorse finali vanno verificati sulla piattaforma:
-gli esempi pubblici possono riferirsi a versioni precedenti.
+Guide prepared on September 10, 2026. Run all remote commands manually with
+your own account. You do not need to share passwords or keys. Verify software
+module names and final resource requests on the platform because public
+examples may refer to older versions.
 
-## 1. Impostare l'accesso dal Mac
+## 1. Configure access from the Mac
 
-Usa il nome del login node e l'account ricevuti dal corso. Se l'accesso richiede
-VPN o un passaggio intermedio, segui le istruzioni associate al tuo account.
-Puoi aggiungere un alias al tuo `~/.ssh/config`, sostituendo i segnaposto:
+Use the login-node hostname and account provided by the course. If access
+requires a VPN or a jump host, follow the instructions associated with your
+account. You can add an alias to your `~/.ssh/config`, replacing the
+placeholders:
 
 ```sshconfig
 Host capri
     HostName capri.dei.unipd.it
-    User IL_TUO_ACCOUNT
+    User YOUR_ACCOUNT
     ServerAliveInterval 60
 ```
 
-Se usi già una chiave autorizzata, puoi indicarla con `IdentityFile`; non
-copiare la chiave privata sul cluster. Prova l'accesso:
+If you already use an authorized key, specify it with `IdentityFile`. Do not
+copy the private key to the cluster. Test the connection:
 
 ```sh
 ssh capri
 ```
 
-Al primo accesso cambia la password con `passwd`, come indicato a lezione.
-Connettiti esclusivamente al login node. Esegui i calcoli attraverso Slurm.
-Queste regole e il riconoscimento della piattaforma nei prodotti scientifici
-sono previsti dal [regolamento CAPRI](https://capri.dei.unipd.it/regulation/).
+On the first login, change your password with `passwd` as instructed in class.
+Connect only to the login node. Run computations through Slurm. These rules
+and the acknowledgement of the platform in scientific work are defined by the
+[CAPRI regulations](https://capri.dei.unipd.it/regulation/).
 
-## 2. Verificare risorse e ambiente, senza avviare calcoli
+## 2. Inspect resources and the environment without running computations
 
-Sul login node:
+On the login node:
 
 ```sh
 sinfo
@@ -41,12 +42,14 @@ module avail
 command -v spack
 ```
 
-Se è disponibile Spack, `spack find` elenca il software installato. Individua
-un compilatore C11 e una MPI compatibile. L'esempio MPI della
-[guida CAPRI](https://capriuserguide.readthedocs.io/en/latest/SLURMExamples.html#mpi-job)
-usa un ambiente Intel storico: non copiarne automaticamente nome e versione.
+If Spack is available, `spack find` lists the installed software. Find a C11
+compiler and a compatible MPI implementation. The MPI example in the
+[CAPRI guide](https://capriuserguide.readthedocs.io/en/latest/SLURMExamples.html#mpi-job)
+uses a legacy Intel environment; do not copy its name and version without
+checking them.
 
-Il laboratorio usa l'Open MPI di sistema, già nel PATH senza `module load`:
+The laboratory uses the system Open MPI installation, which is already in
+`PATH` and does not require `module load`:
 
 ```sh
 command -v gcc mpicc mpirun
@@ -54,18 +57,18 @@ gcc --version
 mpicc --version
 ```
 
-Per conoscere il compilatore richiamato dal wrapper, usa `mpicc -show` oppure,
-con Open MPI, `mpicc --showme`. Scegli `CC` coerente con il compilatore usato da
-`MPICC`, così le opzioni di ottimizzazione sono comparabili.
+To identify the compiler invoked by the wrapper, use `mpicc -show` or, with
+Open MPI, `mpicc --showme`. Choose a `CC` consistent with the compiler used by
+`MPICC` so that the optimization options are comparable.
 
-I programmi MPI si lanciano con `mpirun` dentro l'allocazione Slurm, come
-mostrato a lezione. Non dedurre la compatibilità dal solo fatto che `mpicc`
-compila: il job di verifica del punto 5 controlla anche l'avvio effettivo di
-più rank.
+Launch MPI programs with `mpirun` inside the Slurm allocation, as shown in
+class. Do not infer compatibility merely because `mpicc` compiles the source:
+the validation job in Section 5 also checks that multiple ranks start
+successfully.
 
-## 3. Copiare il progetto
+## 3. Copy the project
 
-Dal Mac, nella cartella `project/` del repository:
+From the Mac, in the repository's `project/` directory:
 
 ```sh
 ssh capri 'mkdir -p ~/unipd-hpc'
@@ -78,17 +81,15 @@ rsync -av --exclude .venv --exclude dist \
   ./ capri:~/unipd-hpc/
 ```
 
-Attenzione:
-`.git` vive alla radice del repository e non viene copiato, quindi i
-metadati raccolti sul cluster registrano la revisione come `unknown`;
-annota a mano la revisione locale da cui hai sincronizzato, preferibilmente
-committata prima della campagna finale.
-Non trasferire gli eseguibili macOS: verranno ricompilati su CAPRI. Non avviare
-due job che ricompilano contemporaneamente nella stessa cartella.
+Note that `.git` lives at the repository root and is not copied, so metadata
+collected on the cluster records the revision as `unknown`. Record the local
+revision that you synchronized, preferably after committing it before the
+final campaign. Do not transfer macOS executables; they will be rebuilt on
+CAPRI. Do not start two jobs that compile concurrently in the same directory.
 
-## 4. Salvare l'ambiente del job
+## 4. Save the job environment
 
-Sul login node:
+On the login node:
 
 ```sh
 cd ~/unipd-hpc
@@ -96,8 +97,8 @@ cp src/scripts/capri-env.example.sh src/scripts/capri-env.sh
 nano src/scripts/capri-env.sh
 ```
 
-Inserisci i comandi `module load` o `spack load` verificati al punto 2, includendo
-l'eventuale inizializzazione necessaria nella shell batch. Configura:
+Add the `module load` or `spack load` commands verified in Section 2,
+including any initialization required by the batch shell. Configure:
 
 ```sh
 export CC=gcc
@@ -105,24 +106,24 @@ export MPICC=mpicc
 export CFLAGS='-O3 -std=c11 -Wall -Wextra -Wpedantic -Wshadow -Wconversion'
 ```
 
-Questi sono valori iniziali: adegua compiler/wrapper e gli eventuali flag MPI
-all'ambiente scelto. Il file è escluso da Git e non deve contenere credenziali.
-Gli script Slurm lanciano i programmi MPI con `mpirun` senza opzioni di
-binding: l'allocazione Slurm confina già il job sui core assegnati, e un
-binding esplicito per core entra in conflitto con quel confinamento.
+These are starting values. Adapt the compiler, wrapper and any MPI flags to
+the selected environment. The file is excluded from Git and must not contain
+credentials. The Slurm scripts launch MPI programs with `mpirun` and no
+binding options: the Slurm allocation already confines the job to its assigned
+cores, and explicit per-core binding conflicts with that confinement.
 
-## 5. Compilare e verificare attraverso Slurm
+## 5. Build and validate through Slurm
 
-Il file `src/scripts/capri-check.slurm` richiede inizialmente 4 task, 1 CPU per task,
-1 GiB per nodo e 5 minuti, ed esegue compilazione e test sui nodi assegnati.
-Verifica che queste richieste siano compatibili con il tuo account, poi invia:
+`src/scripts/capri-check.slurm` initially requests 4 tasks, 1 CPU per task,
+1 GiB per node and 5 minutes, then builds and tests on the allocated nodes.
+Confirm that these requests are compatible with your account, then submit:
 
 ```sh
 sbatch src/scripts/capri-check.slurm
 squeue -u "$USER"
 ```
 
-Annota il JOBID restituito. Dopo la conclusione:
+Record the returned JOBID. After completion:
 
 ```sh
 cat slurm-JOBID.out
@@ -130,88 +131,90 @@ cat slurm-JOBID.err
 seff JOBID
 ```
 
-Devono passare le suite C con 1, 2 e 4 rank e le verifiche degli input non
-validi. Queste ultime provocano volutamente exit code non nulli in alcuni step;
-il job complessivo deve comunque terminare con successo. Gli ultimi due comandi
-stampano righe CSV sequenziali e MPI. Se il launcher segnala errori,
-rivedi l'ambiente in `capri-env.sh`, poi ripeti il job di verifica.
+The C test suites must pass with 1, 2 and 4 ranks, as must the invalid-input
+checks. The latter intentionally produce nonzero exit codes in some steps, but
+the overall job must still finish successfully. The last two commands print
+sequential and MPI CSV rows. If the launcher reports errors, review the
+environment in `capri-env.sh` and repeat the validation job.
 
-`allgroups` e le richieste esplicite di task/partizione/tempo/memoria con
-`seff` a posteriori seguono la [guida Slurm CAPRI](https://capriuserguide.readthedocs.io/en/latest/UsingSLURM.html).
+The `allgroups` partition and explicit task, partition, time and memory
+requests, followed by `seff` inspection, follow the
+[CAPRI Slurm guide](https://capriuserguide.readthedocs.io/en/latest/UsingSLURM.html).
 
-## 6. Eseguire il primo pilot
+## 6. Run the first pilot
 
-Il pilot iniziale usa `N=4096`, seed 42, 3 invocazioni per punto e
-`P=1,2,4,8`. Le matrici sono quindi 4096x4096, 2048x8192 e 8192x2048. È un
-punto di partenza operativo, non la scelta della campagna finale: sul Mac le
-matrici piccole (fino a ~1024) misurano quasi solo comunicazione, e su CAPRI
-il singolo core sarà probabilmente più lento, non più veloce.
+The initial pilot uses `N=4096`, seed 42, 3 invocations per point and
+`P=1,2,4,8`. The matrices are therefore 4096x4096, 2048x8192 and 8192x2048.
+This is an operational starting point, not the final campaign choice: on the
+Mac, small matrices up to about 1024 mostly measure communication, while a
+single CAPRI core will probably be slower rather than faster.
 
 ```sh
 sbatch src/scripts/capri-benchmark.slurm
 ```
 
-Lo script ricompila sul nodo assegnato e crea
-`results/capri-pilot-JOBID/`. Ogni invocazione misura una sola trasformata.
-Sono salvati `raw.csv` e `metadata.txt` (configurazione, launcher, revisione
-Git, versioni). In caso di errore i dati parziali restano disponibili, ma il
-log Slurm registra il fallimento: non usarli come campagna finale.
+The script rebuilds on the allocated node and creates
+`results/capri-pilot-JOBID/`. Each invocation measures one transform.
+It saves `raw.csv` and `metadata.txt` with the configuration, launcher, Git
+revision and software versions. If an error occurs, partial data remain
+available but the Slurm log records the failure; do not use them as the final
+campaign.
 
-Per un pilot successivo, scegli una nuova dimensione e una lista di processi
-giustificata dai primi risultati. Per esempio, **solo se autorizzati e utili**,
-16 processi e `N=8192`:
+For a later pilot, choose a new size and a process list justified by the first
+results. For example, **only if authorized and useful**, use 16 processes and
+`N=8192`:
 
 ```sh
 export BASE_N=8192 RUNS=3 PROCESSES='1 2 4 8 16'
 sbatch --ntasks=16 --time=00:20:00 --mem=4G src/scripts/capri-benchmark.slurm
 ```
 
-Le opzioni mostrate sono esempi di pilot, da adeguare con le misure. Gli script
-ereditano le variabili esportate. Per tornare ai valori predefiniti:
+The displayed options are pilot examples and must be adapted using
+measurements. The scripts inherit exported variables. Restore the defaults
+with:
 
 ```sh
 unset BASE_N RUNS PROCESSES CAMPAIGN
 ```
 
-## 7. Scegliere N, processi, memoria e tempo
+## 7. Choose N, process counts, memory and time
 
-Recupera un pilot sul Mac seguendo il punto 9, poi esegui `make analyze` sul
-relativo percorso. Controlla minimo, mediana e massimo dei tempi per ogni punto.
-Se i tempi diventano troppo brevi o la dispersione è elevata, prova un N più
-grande prima di fissare la campagna. Il massimo P è sempre una potenza di due
-non maggiore di N/2, perché deve essere valido per tutte le tre forme.
+Retrieve a pilot on the Mac as described in Section 9, then run `make analyze`
+on that path. Inspect the minimum, median and maximum time for every point. If
+times become too short or their spread is high, try a larger N before fixing
+the campaign. The maximum P is always a power of two no greater than N/2
+because it must be valid for all three shapes.
 
-Con `M=16*N*N` byte di matrice, le allocazioni principali sono:
+With `M=16*N*N` bytes per matrix, the main allocations are:
 
-- sequenziale: `2*M`;
-- MPI, ciascun rank: `4*M/P` (ogni rank genera direttamente le proprie righe,
-  nessun rank alloca l'intera matrice).
+- sequential: `2*M`;
+- MPI, per rank: `4*M/P`, because each rank directly generates its own rows
+  and no rank allocates the complete matrix.
 
-Se tutti i rank sono sullo stesso nodo, il picco complessivo degli array MPI è
-`4*M`. Per N=4096 sono circa 1 GiB, per N=8192 circa 4 GiB, per N=16384 circa
-16 GiB. Aggiungi MPI, runtime e un margine prudente; controlla le misure con
-`seff`. Su più nodi, considera quanti rank si trovano su ciascun nodo.
-`--mem` è una richiesta **per nodo**, come
-specificato nella [documentazione sbatch](https://slurm.schedmd.com/sbatch.html#OPT_mem).
+If all ranks share one node, the aggregate MPI-array peak is `4*M`. It is
+approximately 1 GiB for N=4096, 4 GiB for N=8192 and 16 GiB for N=16384. Add
+MPI, the runtime and a prudent margin, then check the measurements with
+`seff`. With multiple nodes, account for how many ranks reside on each node.
+`--mem` is a **per-node** request, as specified in the
+[sbatch documentation](https://slurm.schedmd.com/sbatch.html#OPT_mem).
 
-Il tempo batch include compilazione, generazione e avvio di ogni
-processo: non stimarlo usando soltanto il tempo kernel del CSV. Con K conteggi
-MPI, il numero di invocazioni è `3 * RUNS * (1 + K)`. Usa il tempo totale dei
-pilot e un margine per la richiesta finale. Non servono 128 o 256 processi a
-priori; esplora 8, 16 e oltre soltanto se le risorse e le prime misure lo
-giustificano. Conserva saturazioni e rallentamenti.
+Batch time includes compilation, generation and startup of every process; do
+not estimate it using only the CSV kernel time. With K MPI process counts, the
+number of invocations is `3 * RUNS * (1 + K)`. Use the pilots' total time plus
+a margin for the final request. There is no a priori need for 128 or 256
+processes; explore 8, 16 and beyond only if the resources and initial
+measurements justify them. Preserve saturation points and slowdowns.
 
-Prima della campagna finale annota N, lista P, memoria, tempo e motivazione
-della scelta in un file nella cartella dei risultati. Mantieni fisso il
-launcher e le sue opzioni tra i punti. I metadati registrano launcher,
-revisione Git e job Slurm; non
-è richiesta una campagna separata sulla collocazione dei rank.
+Before the final campaign, record N, the P list, memory, time and the reason
+for the choice in a file in the results directory. Keep the launcher and its
+options fixed across points. The metadata record the launcher, Git revision
+and Slurm job; a separate rank-placement campaign is not required.
 
-## 8. Campagna finale
+## 8. Run the final campaign
 
-Quando hai scelto i valori, esportali e invia il job. Nel seguente esempio
-`8192`, `1 2 4 8 16`, `16`, `00:30:00` e `4G` vanno sostituiti con i valori
-determinati dal tuo pilot:
+After choosing the values, export them and submit the job. In the following
+example, replace `8192`, `1 2 4 8 16`, `16`, `00:30:00` and `4G` with the
+values determined by your pilot:
 
 ```sh
 export BASE_N=8192 RUNS=20 PROCESSES='1 2 4 8 16' SEED=42 CAMPAIGN=final
@@ -219,21 +222,21 @@ sbatch --job-name=fft-final --ntasks=16 --time=00:30:00 --mem=4G \
   src/scripts/capri-benchmark.slurm
 ```
 
-La directory sarà `results/capri-final-JOBID/`. Il programma esegue venti
-baseline sequenziali per ciascuna forma e venti invocazioni MPI per ogni P,
-comprese quelle con P=1. Non cambiare la lista dopo aver visto soltanto i punti
-favorevoli. Non mescolare risultati provenienti da N, seed, revisioni o flag
-diversi nella stessa analisi.
+The directory will be `results/capri-final-JOBID/`. The program runs twenty
+sequential baselines for each shape and twenty MPI invocations for every P,
+including P=1. Do not change the list after seeing only the favorable points.
+Do not combine results from different N values, seeds, revisions or flags in
+one analysis.
 
-## 9. Recuperare e analizzare sul Mac
+## 9. Retrieve and analyze on the Mac
 
-Dopo il job, sul login node:
+After the job, on the login node:
 
 ```sh
 seff JOBID
 ```
 
-Dal Mac, nella cartella `project/` del repository:
+From the Mac, in the repository's `project/` directory:
 
 ```sh
 rsync -av capri:~/unipd-hpc/results/capri-final-JOBID/ results/capri-final-JOBID/
@@ -244,37 +247,40 @@ uv sync --locked
 make analyze RESULTS=results/capri-final-JOBID
 ```
 
-Sostituisci JOBID anche dentro gli apici. Per un pilot usa invece il percorso
-`capri-pilot-JOBID`. Non è necessario installare Python o LaTeX sul cluster.
+Replace JOBID inside the quotes as well. For a pilot, use the
+`capri-pilot-JOBID` path instead. Python and LaTeX do not need to be installed
+on the cluster.
 
-L'analisi produce `summary.csv` e tre grafici `speedup-square`, `speedup-wide`,
-`speedup-tall`, in PDF e PNG. La velocizzazione è il rapporto delle mediane
-sequenziale/MPI; le tabelle includono min/max e compute fraction. Quest'ultima
-misura la frazione dedicata alle FFT locali: il complemento include packing,
-unpacking, collettive e attese, non soltanto rete.
+The analysis produces `summary.csv` and the three `speedup-square`,
+`speedup-wide` and `speedup-tall` plots in PDF and PNG formats. Speedup is the
+ratio of the sequential and MPI medians; the tables include minimum, maximum
+and compute fraction. The latter measures the fraction spent in local FFTs;
+its complement includes packing, unpacking, collectives and waiting, not only
+network transfers.
 
-## 10. Report e archivio
+## 10. Build the report and archive
 
-Sul Mac:
+On the Mac:
 
 ```sh
 make report RESULTS=results/capri-final-JOBID CAPRI_FINAL=1
 ```
 
-Apri `report/report.pdf`. Le tabelle e i grafici sono generati dai CSV. Completa
-la discussione con le osservazioni del pilot, l'ambiente scelto, la stabilità e
-i limiti delle tre curve, senza attribuire al rapporto d'aspetto differenze non
-isolate dall'esperimento. I requisiti del corso (slide 11 delle slide introduttive del
-laboratorio) sono: 3-8 pagine a colonna singola, font di almeno
-10 pt, inglese, PDF; il sorgente usa IEEEtran in modalità a colonna
-singola. Il sorgente include la formula di acknowledgement CAPRI.
+Open `report/report.pdf`. The tables and plots are generated from the CSV
+files. Complete the discussion with observations from the pilot, the selected
+environment, stability and the limitations of the three curves. Do not
+attribute aspect-ratio differences that the experiment did not isolate. The
+course requirements from slide 11 of the laboratory introduction are 3-8
+single-column pages, a font of at least 10 pt, English and PDF. The source uses
+IEEEtran in single-column mode and includes the required CAPRI
+acknowledgement.
 
 ```sh
 make dist RESULTS=results/capri-final-JOBID
 ```
 
-L'archivio `dist/parallel-2d-fft.zip` contiene esattamente la consegna:
-`fft2d_seq.c`, `fft2d_mpi.c` e `report.pdf`, rigenerato dalla campagna indicata
-ed etichettato come finale. La creazione viene rifiutata se la cartella non è
-una campagna `results/capri-final-JOBID`. Segui eventuali istruzioni di
-consegna Moodle più recenti.
+The `dist/parallel-2d-fft.zip` archive contains exactly the submission:
+`fft2d_seq.c`, `fft2d_mpi.c` and `report.pdf`, rebuilt from the selected
+campaign and labeled as final. Creation is rejected unless the directory is a
+`results/capri-final-JOBID` campaign. Follow any newer Moodle submission
+instructions.
