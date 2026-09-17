@@ -1,0 +1,11 @@
+Job ID: 302588
+Cluster: cluster_capri
+User/Group: p1104u16/p1104
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 64
+CPU Utilized: 16:15:05
+CPU Efficiency: 6.04% of 11-05:00:48 core-walltime
+Job Wall-clock time: 04:12:12
+Memory Utilized: 69.34 GB
+Memory Efficiency: 86.67% of 80.00 GB

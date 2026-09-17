@@ -1,0 +1,5 @@
+base_n=8192 seed=42 runs=20 processes='1 2 4 8 16'
+launch='mpirun -np' date=2026-09-10T20:29:28Z
+git=ed1cc837b7b293e0c2497ef0b9870c001ab512d1 dirty=yes
+host=hpcapri slurm_job=302584
+gcc (SUSE Linux) 7.5.0

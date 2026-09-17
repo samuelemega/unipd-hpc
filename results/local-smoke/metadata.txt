@@ -1,0 +1,5 @@
+base_n=256 seed=42 runs=10 processes='1 2 4'
+launch='mpiexec -n' date=2026-09-10T13:53:03Z
+git=256f7fabaa2e2c369d540caa87b98f9e9ac29517 dirty=yes
+host=MacBook-Air-di-Samuele.local slurm_job=none
+Apple clang version 21.0.0 (clang-2100.1.1.101)

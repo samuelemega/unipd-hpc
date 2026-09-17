@@ -1,0 +1,9 @@
+[project]
+name = "parallel-2d-fft-analysis"
+version = "0.1.0"
+description = "CSV aggregation and plots for the standalone 2D FFT study"
+requires-python = ">=3.11"
+dependencies = ["matplotlib>=3.9,<4"]
+
+[tool.uv]
+package = false
